@@ -1,14 +1,19 @@
 package com.alexbbb.uploadservice;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -51,6 +56,7 @@ public class UploadService extends IntentService {
     public static final String ERROR_EXCEPTION = "errorException";
     public static final String SERVER_RESPONSE_CODE = "serverResponseCode";
     public static final String SERVER_RESPONSE_MESSAGE = "serverResponseMessage";
+    public static final String SERVER_RESPONSE_BODY = "serverResponseBody";
 
     private NotificationManager notificationManager;
     private Builder notification;
@@ -131,6 +137,10 @@ public class UploadService extends IntentService {
 
         HttpURLConnection conn = null;
         OutputStream requestStream = null;
+        
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+       
+        byte[] buf = new byte[4096];
 
         try {
             conn = getMultipartHttpURLConnection(url, boundary);
@@ -147,8 +157,29 @@ public class UploadService extends IntentService {
 
             final int serverResponseCode = conn.getResponseCode();
             final String serverResponseMessage = conn.getResponseMessage();
-
-            broadcastCompleted(serverResponseCode, serverResponseMessage);
+            final String serverResponseBody; 
+            
+            StringBuilder response  = new StringBuilder();
+            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK)
+            {
+                BufferedReader input = new BufferedReader(new InputStreamReader(conn.getInputStream()),8192);
+                String strLine = null;
+                while ((strLine = input.readLine()) != null)
+                {
+                    response.append(strLine);
+                }
+                input.close();
+            }
+            // close the inputstream
+            //is.close();
+            serverResponseBody = new String(os.toByteArray());
+            System.out.println("SERVER RESPONSE BODY " + response);
+            for (Map.Entry<String, List<String>> k : conn.getHeaderFields().entrySet()) {
+                for (String v : k.getValue()){
+                     System.out.println(k.getKey() + ":" + v);
+                }
+            }
+            broadcastCompleted(serverResponseCode, serverResponseMessage, response.toString());
 
         } finally {
             closeOutputStream(requestStream);
@@ -327,7 +358,7 @@ public class UploadService extends IntentService {
         sendBroadcast(intent);
     }
 
-    private void broadcastCompleted(final int responseCode, final String responseMessage) {
+    private void broadcastCompleted(final int responseCode, final String responseMessage, final String responseBody) {
 
         final String filteredMessage;
         if (responseMessage == null) {
@@ -342,6 +373,7 @@ public class UploadService extends IntentService {
         intent.putExtra(STATUS, STATUS_COMPLETED);
         intent.putExtra(SERVER_RESPONSE_CODE, responseCode);
         intent.putExtra(SERVER_RESPONSE_MESSAGE, filteredMessage);
+        intent.putExtra(SERVER_RESPONSE_BODY, responseBody);
         sendBroadcast(intent);
     }
 
