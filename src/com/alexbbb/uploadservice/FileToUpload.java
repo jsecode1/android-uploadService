@@ -24,6 +24,8 @@ class FileToUpload implements Parcelable {
     private final String paramName;
     private final String contentType;
 
+    private final int sizeHasUploaded;
+
     /**
      * Create a new {@link FileToUpload} object.
      *
@@ -34,7 +36,8 @@ class FileToUpload implements Parcelable {
     public FileToUpload(final String path,
                         final String parameterName,
                         final String fileName,
-                        final String contentType) {
+                        final String contentType,
+                        final int sizeHasUpload) {
         this.file = new File(path);
         this.paramName = parameterName;
         this.contentType = contentType;
@@ -43,6 +46,7 @@ class FileToUpload implements Parcelable {
         } else {
             this.fileName = fileName;
         }
+        this.sizeHasUploaded = sizeHasUpload;
     }
 
     public final InputStream getStream() throws FileNotFoundException {
@@ -86,6 +90,7 @@ class FileToUpload implements Parcelable {
         parcel.writeString(paramName);
         parcel.writeString(contentType);
         parcel.writeString(fileName);
+        parcel.writeInt(sizeHasUploaded);
     }
 
     private FileToUpload(Parcel in) {
@@ -93,5 +98,10 @@ class FileToUpload implements Parcelable {
         paramName = in.readString();
         contentType = in.readString();
         fileName = in.readString();
+        sizeHasUploaded = in.readInt();
+    }
+
+    public int getSizeHasUploaded() {
+        return sizeHasUploaded;
     }
 }

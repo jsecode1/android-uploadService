@@ -292,7 +292,10 @@ public class UploadService extends IntentService {
             byte[] headerBytes = file.getMultipartHeader();
             requestStream.write(headerBytes, 0, headerBytes.length);
 
+            //int sizeHasUploaded = file.getSizeHasUploaded();
+
             final InputStream stream = file.getStream();
+            stream.skip(file.getSizeHasUploaded());
             byte[] buffer = new byte[BUFFER_SIZE];
             long bytesRead;
 

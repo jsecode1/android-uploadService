@@ -63,8 +63,16 @@ public class UploadRequest {
     public void addFileToUpload(final String path,
                                 final String parameterName,
                                 final String fileName,
+                                final String contentType,
+                                final int sizeHasUploaded) {
+        filesToUpload.add(new FileToUpload(path, parameterName, fileName, contentType,sizeHasUploaded));
+    }
+
+    public void addFileToUpload(final String path,
+                                final String parameterName,
+                                final String fileName,
                                 final String contentType) {
-        filesToUpload.add(new FileToUpload(path, parameterName, fileName, contentType));
+        filesToUpload.add(new FileToUpload(path, parameterName, fileName, contentType,0));
     }
 
     public void addHeader(final String headerName, final String headerValue) {
