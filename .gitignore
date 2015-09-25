@@ -1,3 +1,11 @@
 .DS_Store
 /bin
 /gen
+.idea/
+android-uploadService.iml
+build.gradle~
+gradle.properties
+gradle/
+gradlew
+gradlew.bat
+local.properties
