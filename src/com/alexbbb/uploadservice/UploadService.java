@@ -139,8 +139,6 @@ public class UploadService extends IntentService {
         OutputStream requestStream = null;
         
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-       
-        byte[] buf = new byte[4096];
 
         try {
             conn = getMultipartHttpURLConnection(url, boundary);
@@ -148,16 +146,21 @@ public class UploadService extends IntentService {
             setRequestHeaders(conn, requestHeaders);
 
             requestStream = conn.getOutputStream();
-            setRequestParameters(requestStream, requestParameters, boundaryBytes);
+
+            //filesToUpload.size() != 1只传一个文件时不设置boundaryBytes及requestParameters(Form值)
+            if(filesToUpload.size() != 1) {
+                setRequestParameters(requestStream, requestParameters, boundaryBytes);
+            }
 
             uploadFiles(requestStream, filesToUpload, boundaryBytes);
 
-            final byte[] trailer = getTrailerBytes(boundary);
-            requestStream.write(trailer, 0, trailer.length);
+            if(filesToUpload.size() != 1) {
+                final byte[] trailer = getTrailerBytes(boundary);
+                requestStream.write(trailer, 0, trailer.length);
+            }
 
             final int serverResponseCode = conn.getResponseCode();
             final String serverResponseMessage = conn.getResponseMessage();
-            final String serverResponseBody; 
             
             StringBuilder response  = new StringBuilder();
             if (conn.getResponseCode() == HttpURLConnection.HTTP_OK)
@@ -170,9 +173,7 @@ public class UploadService extends IntentService {
                 }
                 input.close();
             }
-            // close the inputstream
-            //is.close();
-            serverResponseBody = new String(os.toByteArray());
+
             System.out.println("SERVER RESPONSE BODY " + response);
             for (Map.Entry<String, List<String>> k : conn.getHeaderFields().entrySet()) {
                 for (String v : k.getValue()){
@@ -288,11 +289,13 @@ public class UploadService extends IntentService {
         final long totalBytes = getTotalBytes(filesToUpload);
         long uploadedBytes = 0;
 
-        for (FileToUpload file : filesToUpload) {
-            byte[] headerBytes = file.getMultipartHeader();
-            requestStream.write(headerBytes, 0, headerBytes.length);
+        boolean isAppendMultipartTag = (filesToUpload.size() > 1);
 
-            //int sizeHasUploaded = file.getSizeHasUploaded();
+        for (FileToUpload file : filesToUpload) {
+            if(isAppendMultipartTag) {
+                byte[] headerBytes = file.getMultipartHeader();
+                requestStream.write(headerBytes, 0, headerBytes.length);
+            }
 
             final InputStream stream = file.getStream();
             stream.skip(file.getSizeHasUploaded());
@@ -308,7 +311,10 @@ public class UploadService extends IntentService {
             } finally {
                 closeInputStream(stream);
             }
-            requestStream.write(boundaryBytes, 0, boundaryBytes.length);
+
+            if(isAppendMultipartTag) {
+                requestStream.write(boundaryBytes, 0, boundaryBytes.length);
+            }
         }
     }
 

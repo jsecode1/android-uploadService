@@ -61,7 +61,7 @@ class FileToUpload implements Parcelable {
     }
 
     public long length() {
-        return file.length();
+        return file.length() - sizeHasUploaded;
     }
 
     // This is used to regenerate the object.
