@@ -18,14 +18,16 @@ public class UploadRequest {
     private UploadNotificationConfig notificationConfig;
     private final Context context;
     private final String url;
+    private final String prepairUploadUrl;
     private final ArrayList<FileToUpload> filesToUpload;
     private final ArrayList<NameValue> headers;
     private final ArrayList<NameValue> parameters;
 
-    public UploadRequest(final Context context, final String serverUrl) {
+    public UploadRequest(final Context context, final String serverUrl, String prepairUploadUrl) {
         this.context = context;
         notificationConfig = new UploadNotificationConfig();
         url = serverUrl;
+        this.prepairUploadUrl = prepairUploadUrl;
         filesToUpload = new ArrayList<FileToUpload>();
         headers = new ArrayList<NameValue>();
         parameters = new ArrayList<NameValue>();
@@ -63,16 +65,8 @@ public class UploadRequest {
     public void addFileToUpload(final String path,
                                 final String parameterName,
                                 final String fileName,
-                                final String contentType,
-                                final int sizeHasUploaded) {
-        filesToUpload.add(new FileToUpload(path, parameterName, fileName, contentType,sizeHasUploaded));
-    }
-
-    public void addFileToUpload(final String path,
-                                final String parameterName,
-                                final String fileName,
                                 final String contentType) {
-        filesToUpload.add(new FileToUpload(path, parameterName, fileName, contentType,0));
+        filesToUpload.add(new FileToUpload(path, parameterName, fileName, contentType));
     }
 
     public void addHeader(final String headerName, final String headerValue) {
@@ -97,6 +91,10 @@ public class UploadRequest {
 
     protected String getServerUrl() {
         return url;
+    }
+
+    protected String getPrepairUploadUrl(){
+        return prepairUploadUrl;
     }
 
     protected ArrayList<FileToUpload> getFilesToUpload() {

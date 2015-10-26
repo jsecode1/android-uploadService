@@ -26,20 +26,23 @@ public abstract class AbstractUploadServiceReceiver extends BroadcastReceiver {
                 switch (status) {
                     case UploadService.STATUS_ERROR:
                         final Exception exception = (Exception) intent.getSerializableExtra(UploadService.ERROR_EXCEPTION);
-                        onError(exception);
+                        final String fileNameException = (String)intent.getStringExtra(UploadService.UPLOADING_FILE);
+                        onError(exception, fileNameException);
                         break;
 
                     case UploadService.STATUS_COMPLETED:
                         final int responseCode = intent.getIntExtra(UploadService.SERVER_RESPONSE_CODE, 0);
                         final String responseMsg = intent.getStringExtra(UploadService.SERVER_RESPONSE_MESSAGE);
                         final String responseBody = intent.getStringExtra(UploadService.SERVER_RESPONSE_BODY);
-                        onCompleted(responseCode, responseMsg, responseBody);
+                        final String fileNameComplete = (String)intent.getStringExtra(UploadService.UPLOADING_FILE);
+                        onCompleted(responseCode, responseMsg, responseBody, fileNameComplete);
                         
                         break;
 
                     case UploadService.STATUS_IN_PROGRESS:
                         final int progress = intent.getIntExtra(UploadService.PROGRESS, 0);
-                        onProgress(progress);
+                        final String fileNameInProcess = (String)intent.getStringExtra(UploadService.UPLOADING_FILE);
+                        onProgress(progress, fileNameInProcess);
                         break;
 
                     default:
@@ -54,18 +57,18 @@ public abstract class AbstractUploadServiceReceiver extends BroadcastReceiver {
      * Called when the upload progress changes.
      * @param progress value from 0 to 100
      */
-    public abstract void onProgress(final int progress);
+    public abstract void onProgress(final int progress, final String fileName);
 
     /**
      * Called when an error happens during the upload.
      * @param exception exception that caused the error
      */
-    public abstract void onError(final Exception exception);
+    public abstract void onError(final Exception exception, final String fileName);
 
     /**
      * Called when the upload is completed successfully.
      * @param serverResponseCode status code returned by the server
      * @param serverResponseMessage string containing the response received from the server
      */
-    public abstract void onCompleted(final int serverResponseCode, final String serverResponseMessage, final String serverResponseBody);
+    public abstract void onCompleted(final int serverResponseCode, final String serverResponseMessage, final String serverResponseBody, final String fileName);
 }
