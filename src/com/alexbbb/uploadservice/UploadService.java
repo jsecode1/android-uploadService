@@ -2,7 +2,6 @@ package com.alexbbb.uploadservice;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,8 +26,6 @@ import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.Builder;
 import android.util.Log;
-
-import com.google.gson.Gson;
 
 /**
  * Service to upload files as a multi-part form data in background using HTTP POST
@@ -66,6 +63,8 @@ public class UploadService extends IntentService {
     public static final String UPLOADING_FILE = "uploadingfile";
 
     public static int maxTransportTimes = 3;//尝试次数
+
+    public static ICipher mCiphertool = null;
 
     private NotificationManager notificationManager;
     private Builder notification;
@@ -227,7 +226,13 @@ public class UploadService extends IntentService {
             sb.append(getMD5(filesToUpload.get(0).getStream()));
             sb.append("\"}");
 
-            requestStream.write(sb.toString().getBytes("utf-8"));
+            byte[] datas = sb.toString().getBytes("utf-8");
+
+            if(mCiphertool != null){
+                datas = mCiphertool.encrypt(datas);
+            }
+
+            requestStream.write(datas);
 
             final int serverResponseCode = conn.getResponseCode();
             final String serverResponseMessage = conn.getResponseMessage();
@@ -243,7 +248,7 @@ public class UploadService extends IntentService {
 //            }
 
             int length = 8192;
-            byte[] datas = new byte[length];
+            datas = new byte[length];
 
             is = conn.getInputStream();
             baos = new ByteArrayOutputStream(0);
@@ -254,6 +259,11 @@ public class UploadService extends IntentService {
             datas = baos.toByteArray();
             baos.close();
             is.close();
+
+            if(mCiphertool != null){
+                datas = mCiphertool.decrypt(datas);
+            }
+
             StringBuilder response = new StringBuilder();
             response.append(new String(datas, "utf-8"));
             String str = new String(datas, "utf-8");
