@@ -286,7 +286,11 @@ public class UploadService extends IntentService {
             }
             //broadcastCompleted(serverResponseCode, serverResponseMessage, response.toString());
 
-        } finally {
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+        }
+        finally {
             if(baos != null){
                 try {
                     baos.close();
